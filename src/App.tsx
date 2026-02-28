@@ -21,6 +21,9 @@ export default function App() {
   const [battleEffect, setBattleEffect] = useState<{ type: 'attack' | 'special' | 'heal' | null, target: 'player' | 'enemy' | null }>({ type: null, target: null });
   const [floatingText, setFloatingText] = useState<{ text: string, target: 'player' | 'enemy', id: number } | null>(null);
   const [isShaking, setIsShaking] = useState(false);
+  const [isHurtPlayer, setIsHurtPlayer] = useState(false);
+  const [isHurtEnemy, setIsHurtEnemy] = useState(false);
+  const [hitSpark, setHitSpark] = useState<'player' | 'enemy' | null>(null);
 
   const playSound = useCallback((type: 'attack' | 'special' | 'heal' | 'select' | 'victory') => {
     if (isMuted) return;
@@ -80,7 +83,7 @@ export default function App() {
     setBattleEffect({ type: move.type as any, target: isPlayer ? 'enemy' : 'player' });
     setTimeout(() => setBattleEffect({ type: null, target: null }), 500);
 
-    await new Promise(resolve => setTimeout(resolve, 600));
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     if (move.type === 'heal') {
       const healAmount = Math.abs(move.damage);
@@ -92,6 +95,17 @@ export default function App() {
       addLog(`${attacker.name} رجع ${healAmount} من صحته!`, 'heal');
       setFloatingText({ text: `+${healAmount}`, target: isPlayer ? 'player' : 'enemy', id: Date.now() });
     } else {
+      // Show hit spark and hurt state
+      setHitSpark(isPlayer ? 'enemy' : 'player');
+      if (isPlayer) setIsHurtEnemy(true);
+      else setIsHurtPlayer(true);
+
+      setTimeout(() => {
+        setHitSpark(null);
+        setIsHurtEnemy(false);
+        setIsHurtPlayer(false);
+      }, 400);
+
       // Calculate damage with some randomness and defense
       const baseDamage = move.damage + (attacker.attack * 0.5);
       const mitigatedDamage = Math.max(5, Math.floor(baseDamage - (defender.defense * 0.3)));
@@ -109,6 +123,7 @@ export default function App() {
       setTimeout(() => setIsShaking(false), 300);
     }
 
+    await new Promise(resolve => setTimeout(resolve, 300));
     setTimeout(() => setFloatingText(null), 1000);
 
     setIsAnimating(false);
@@ -264,9 +279,28 @@ export default function App() {
               {/* Player */}
               <motion.div 
                 className="relative z-10 flex flex-col items-center"
-                animate={isAnimating && isPlayerTurn ? { x: [0, 100, 0] } : {}}
+                animate={
+                  isAnimating && isPlayerTurn ? { x: [0, 150, 0], scale: [1, 1.1, 1] } : 
+                  isHurtPlayer ? { x: [0, -10, 10, -10, 0], filter: ['brightness(1)', 'brightness(2) saturate(2) hue-rotate(300deg)', 'brightness(1)'] } : 
+                  {}
+                }
+                transition={{ duration: isAnimating ? 0.4 : 0.1 }}
               >
                 <div className="relative mb-4">
+                  {/* Hit Spark */}
+                  <AnimatePresence>
+                    {hitSpark === 'player' && (
+                      <motion.div
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: [0, 2, 0], opacity: [0, 1, 0] }}
+                        className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none"
+                      >
+                        <div className="w-32 h-32 bg-white rounded-full blur-xl opacity-50" />
+                        <Swords className="w-16 h-16 text-white absolute" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   {/* Floating Text */}
                   <AnimatePresence>
                     {floatingText && floatingText.target === 'player' && (
@@ -312,9 +346,28 @@ export default function App() {
               {/* Enemy */}
               <motion.div 
                 className="relative z-10 flex flex-col items-center"
-                animate={isAnimating && !isPlayerTurn ? { x: [0, -100, 0] } : {}}
+                animate={
+                  isAnimating && !isPlayerTurn ? { x: [0, -150, 0], scale: [1, 1.1, 1] } : 
+                  isHurtEnemy ? { x: [0, 10, -10, 10, 0], filter: ['brightness(1)', 'brightness(2) saturate(2) hue-rotate(300deg)', 'brightness(1)'] } : 
+                  {}
+                }
+                transition={{ duration: isAnimating ? 0.4 : 0.1 }}
               >
                 <div className="relative mb-4">
+                  {/* Hit Spark */}
+                  <AnimatePresence>
+                    {hitSpark === 'enemy' && (
+                      <motion.div
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: [0, 2, 0], opacity: [0, 1, 0] }}
+                        className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none"
+                      >
+                        <div className="w-32 h-32 bg-white rounded-full blur-xl opacity-50" />
+                        <Swords className="w-16 h-16 text-white absolute" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   {/* Floating Text */}
                   <AnimatePresence>
                     {floatingText && floatingText.target === 'enemy' && (
