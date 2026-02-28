@@ -1,0 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;600;800&family=JetBrains+Mono&family=Cairo:wght@400;600;700;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Anton", "Cairo", sans-serif;
+  --font-sans: "Inter", "Cairo", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-[#050505] text-white font-sans overflow-hidden;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.animate-shake {
+  animation: shake 0.2s ease-in-out 0s 2;
+}
+
+.glass-panel {
+  @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl;
+}
