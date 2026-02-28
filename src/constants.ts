@@ -15,7 +15,8 @@ export const CHARACTERS: Character[] = [
       { name: 'ضربة النبوت', damage: 18, type: 'physical', description: 'ضربة قوية بالنبوت الصعيدي الأصيل.' },
       { name: 'كاميهاميها النار', damage: 45, type: 'special', description: 'طاقة هائلة تطلع من القلب.' },
       { name: 'طعمية السنزو', damage: -35, type: 'heal', description: 'طعمية سخنة بترجع الصحة في ثانية.' }
-    ]
+    ],
+    ultimate: { name: 'غضب الصعيدي', damage: 80, type: 'ultimate', description: 'ضربة قاضية بتهز الأرض من تحت الخصم.' }
   },
   {
     id: 'naruto',
@@ -31,7 +32,8 @@ export const CHARACTERS: Character[] = [
       { name: 'ضربة المعلم', damage: 15, type: 'physical', description: 'ضربة سريعة من ابن البلد.' },
       { name: 'راسينجان الملوخية', damage: 38, type: 'special', description: 'دوامة طاقة خضراء جبارة.' },
       { name: 'باور الكشري', damage: -30, type: 'heal', description: 'طبق كشري بالدقة يخليك وحش.' }
-    ]
+    ],
+    ultimate: { name: 'فزعة الحتة', damage: 75, type: 'ultimate', description: 'بينادي على كل ولاد الحتة يضربوا معاه.' }
   },
   {
     id: 'luffy',
@@ -47,7 +49,8 @@ export const CHARACTERS: Character[] = [
       { name: 'بستول البحر', damage: 20, type: 'physical', description: 'إيد بتتمط من هنا لإسكندرية.' },
       { name: 'ريد هوك الفحم', damage: 40, type: 'special', description: 'ضربة نار كأنها طالعة من شواية.' },
       { name: 'أكلة سمك', damage: -25, type: 'heal', description: 'وجبة سي فود ترد الروح.' }
-    ]
+    ],
+    ultimate: { name: 'إعصار المينا', damage: 78, type: 'ultimate', description: 'إعصار بحري بيغرق الخصم في شبر مية.' }
   },
   {
     id: 'knight-moon',
@@ -63,6 +66,7 @@ export const CHARACTERS: Character[] = [
       { name: 'خبطة الهلال', damage: 22, type: 'physical', description: 'ضربة قوية زي موج النيل.' },
       { name: 'شعاع الأهرامات', damage: 48, type: 'special', description: 'طاقة قديمة من قلب الهرم.' },
       { name: 'شاي العصاري', damage: -32, type: 'heal', description: 'كوباية شاي تعدل الدماغ وتداوي الجروح.' }
-    ]
+    ],
+    ultimate: { name: 'لعنة الفراعنة', damage: 85, type: 'ultimate', description: 'بيسلط روح الفراعنة على الخصم تخلص عليه.' }
   }
 ];

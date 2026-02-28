@@ -7,7 +7,7 @@ export enum GameState {
 export interface Move {
   name: string;
   damage: number;
-  type: 'physical' | 'special' | 'heal';
+  type: 'physical' | 'special' | 'heal' | 'ultimate';
   description: string;
 }
 
@@ -22,10 +22,12 @@ export interface Character {
   attack: number;
   defense: number;
   moves: Move[];
+  ultimate: Move;
+  hasUsedUltimate?: boolean;
 }
 
 export interface BattleLog {
   id: string;
   message: string;
-  type: 'attack' | 'special' | 'heal' | 'system';
+  type: 'attack' | 'special' | 'heal' | 'system' | 'ultimate';
 }

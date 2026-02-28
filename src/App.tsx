@@ -24,6 +24,7 @@ export default function App() {
   const [isHurtPlayer, setIsHurtPlayer] = useState(false);
   const [isHurtEnemy, setIsHurtEnemy] = useState(false);
   const [hitSpark, setHitSpark] = useState<'player' | 'enemy' | null>(null);
+  const [showUltimateText, setShowUltimateText] = useState<string | null>(null);
 
   const playSound = useCallback((type: 'attack' | 'special' | 'heal' | 'select' | 'victory') => {
     if (isMuted) return;
@@ -72,12 +73,23 @@ export default function App() {
     const attacker = isPlayer ? player : enemy;
     const defender = isPlayer ? enemy : player;
     
-    addLog(`${attacker.name} استخدم ${move.name}!`, move.type === 'heal' ? 'heal' : 'attack');
+    addLog(`${attacker.name} استخدم ${move.name}!`, move.type === 'heal' ? 'heal' : move.type === 'ultimate' ? 'ultimate' : 'attack');
     
     // Play sound based on move type
     if (move.type === 'heal') playSound('heal');
-    else if (move.type === 'special') playSound('special');
+    else if (move.type === 'special' || move.type === 'ultimate') playSound('special');
     else playSound('attack');
+
+    // Mark ultimate as used
+    if (move.type === 'ultimate') {
+      if (isPlayer) setPlayer(prev => prev ? { ...prev, hasUsedUltimate: true } : null);
+      else setEnemy(prev => prev ? { ...prev, hasUsedUltimate: true } : null);
+      
+      // Dramatic pause and text for ultimate
+      setShowUltimateText(move.name);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setShowUltimateText(null);
+    }
 
     // Trigger visual effect
     setBattleEffect({ type: move.type as any, target: isPlayer ? 'enemy' : 'player' });
@@ -134,9 +146,11 @@ export default function App() {
   useEffect(() => {
     if (!isPlayerTurn && gameState === GameState.BATTLE && !isAnimating && enemy && player) {
       const timer = setTimeout(() => {
-        // Simple AI: Heal if low HP, otherwise random attack
+        // Simple AI: Ultimate if available and player HP low or enemy HP low
         let move;
-        if (enemy.hp < enemy.maxHp * 0.3 && Math.random() > 0.3) {
+        if (!enemy.hasUsedUltimate && (player.hp < player.maxHp * 0.5 || enemy.hp < enemy.maxHp * 0.3)) {
+          move = enemy.ultimate;
+        } else if (enemy.hp < enemy.maxHp * 0.3 && Math.random() > 0.3) {
           move = enemy.moves.find(m => m.type === 'heal') || enemy.moves[0];
         } else {
           const attackMoves = enemy.moves.filter(m => m.type !== 'heal');
@@ -260,18 +274,67 @@ export default function App() {
                     className={`absolute inset-0 z-20 pointer-events-none flex items-center justify-center ${
                       battleEffect.type === 'heal' ? 'bg-green-500/10' : 
                       battleEffect.type === 'special' ? 'bg-orange-500/20' : 
+                      battleEffect.type === 'ultimate' ? 'bg-purple-900/40' :
                       'bg-white/5'
                     }`}
                   >
-                    {battleEffect.type === 'special' && (
+                    {battleEffect.type === 'ultimate' && (
+                      <div className="absolute inset-0 overflow-hidden">
+                        {[...Array(20)].map((_, i) => (
+                          <motion.div
+                            key={i}
+                            initial={{ x: Math.random() * 1000 - 500, y: Math.random() * 1000 - 500, scale: 0 }}
+                            animate={{ 
+                              x: [null, Math.random() * 2000 - 1000], 
+                              y: [null, Math.random() * 2000 - 1000],
+                              scale: [0, 1.5, 0],
+                              rotate: [0, 360]
+                            }}
+                            transition={{ duration: 1.5, ease: "easeOut" }}
+                            className="absolute w-4 h-4 bg-purple-500/40 rounded-full blur-sm"
+                            style={{ left: '50%', top: '50%' }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                    {(battleEffect.type === 'special' || battleEffect.type === 'ultimate') && (
                       <motion.div 
                         initial={{ scale: 0, rotate: 0 }}
                         animate={{ scale: [1, 2, 1.5], rotate: [0, 90, 180] }}
-                        className="w-64 h-64 border-4 border-orange-500/30 rounded-full flex items-center justify-center"
+                        className={`w-64 h-64 border-4 rounded-full flex items-center justify-center ${
+                          battleEffect.type === 'ultimate' ? 'border-purple-500 shadow-[0_0_100px_rgba(168,85,247,0.5)]' : 'border-orange-500/30'
+                        }`}
                       >
-                        <Zap className="w-32 h-32 text-orange-500 animate-pulse" />
+                        <Zap className={`w-32 h-32 animate-pulse ${
+                          battleEffect.type === 'ultimate' ? 'text-purple-400' : 'text-orange-500'
+                        }`} />
                       </motion.div>
                     )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Ultimate Text Overlay */}
+              <AnimatePresence>
+                {showUltimateText && (
+                  <motion.div
+                    initial={{ x: '-100%', opacity: 0 }}
+                    animate={{ x: '0%', opacity: 1 }}
+                    exit={{ x: '100%', opacity: 0 }}
+                    transition={{ type: "spring", damping: 15 }}
+                    className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none"
+                  >
+                    <div className="bg-purple-600/90 text-white w-full py-8 flex flex-col items-center shadow-[0_0_100px_rgba(168,85,247,0.8)] border-y-4 border-white/20">
+                      <motion.span 
+                        initial={{ scale: 0.5 }}
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ repeat: Infinity, duration: 0.5 }}
+                        className="text-5xl md:text-7xl font-display uppercase tracking-widest italic"
+                      >
+                        {showUltimateText}
+                      </motion.span>
+                      <span className="text-xl font-display uppercase tracking-[0.5em] mt-2 text-white/50">الحركة القاضية</span>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -436,6 +499,39 @@ export default function App() {
                     </button>
                   ))}
                 </div>
+
+                {/* Ultimate Move */}
+                <div className="mt-4 pt-4 border-t border-white/5">
+                  <button
+                    disabled={!isPlayerTurn || isAnimating || player.hasUsedUltimate}
+                    onClick={() => handleMove(player.ultimate, true)}
+                    className={`w-full group relative p-4 rounded-xl border transition-all disabled:opacity-50 disabled:cursor-not-allowed text-left overflow-hidden ${
+                      player.hasUsedUltimate 
+                        ? 'border-white/5 bg-white/5 grayscale' 
+                        : 'border-orange-500/50 bg-orange-500/10 hover:bg-orange-500/20 hover:border-orange-500'
+                    }`}
+                  >
+                    {!player.hasUsedUltimate && (
+                      <motion.div 
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12"
+                        animate={{ x: ['-100%', '200%'] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      />
+                    )}
+                    <div className="relative flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <Trophy className={`w-5 h-5 ${player.hasUsedUltimate ? 'text-white/20' : 'text-orange-500'}`} />
+                        <span className="font-display uppercase text-xl">الحركة القاضية: {player.ultimate.name}</span>
+                      </div>
+                      {player.hasUsedUltimate ? (
+                        <span className="text-[10px] font-mono text-white/20 uppercase">تم الاستخدام</span>
+                      ) : (
+                        <span className="text-[10px] font-mono text-orange-500 uppercase animate-pulse">جاهزة!</span>
+                      )}
+                    </div>
+                    <p className="relative text-xs text-white/60">{player.ultimate.description}</p>
+                  </button>
+                </div>
               </div>
 
               <div className="glass-panel p-6 flex flex-col">
@@ -451,6 +547,7 @@ export default function App() {
                         log.type === 'attack' ? 'text-red-400' : 
                         log.type === 'heal' ? 'text-green-400' : 
                         log.type === 'special' ? 'text-orange-400' : 
+                        log.type === 'ultimate' ? 'text-purple-400 font-bold' :
                         'text-blue-400'
                       }>
                         {log.message}
